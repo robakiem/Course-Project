@@ -33,3 +33,10 @@ C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\r
 C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\CourseProject.pdb
 C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\CourseProject.genruntimeconfig.cache
 C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\ref\CourseProject.dll
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\bin\Debug\net9.0\CourseProject.staticwebassets.runtime.json
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\CourseProject.RazorAssemblyInfo.cache
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\CourseProject.RazorAssemblyInfo.cs
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\CourseProject.sourcelink.json
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\compressed\4c6d7nn61c-{0}-j69836ik4i-j69836ik4i.gz
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\compressed\7zwefva40d-{0}-y8eplhe4uk-y8eplhe4uk.gz
+C:\Users\Ivan\Desktop\C#\Projects\CourseProject\CourseProject\obj\Debug\net9.0\compressed\s7927l9f07-{0}-84ndybtpnw-84ndybtpnw.gz

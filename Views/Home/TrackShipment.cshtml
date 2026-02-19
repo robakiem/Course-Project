@@ -1,0 +1,289 @@
+@{
+    ViewData["Title"] = "Трекер посилок - Smart-Post";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-search"></i> Відслідковування посилки
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control form-control-lg" 
+                           id="trackingNumber" 
+                           placeholder="Введіть номер трекування (наприклад: TRK123)" />
+                    <button class="btn btn-primary btn-lg" id="trackBtn">
+                        <i class="fas fa-magnifying-glass"></i> Знайти
+                    </button>
+                </div>
+
+                <div id="resultContainer" style="display: none;">
+                    <div class="alert alert-info">
+                        <h5 id="shipmentStatus"></h5>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-box"></i> Інформація про посилку
+                                    </h6>
+                                    <dl class="row mt-3 mb-0">
+                                        <dt class="col-sm-5">Номер трекування:</dt>
+                                        <dd class="col-sm-7" id="trackNumber">-</dd>
+
+                                        <dt class="col-sm-5">ID посилки:</dt>
+                                        <dd class="col-sm-7" id="shipmentId">-</dd>
+
+                                        <dt class="col-sm-5">Регіон:</dt>
+                                        <dd class="col-sm-7" id="regionId">-</dd>
+
+                                        <dt class="col-sm-5">Статус:</dt>
+                                        <dd class="col-sm-7">
+                                            <span id="status" class="badge bg-warning">-</span>
+                                        </dd>
+
+                                        <dt class="col-sm-5">Дата реєстрації:</dt>
+                                        <dd class="col-sm-7" id="createdAt">-</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-map-location-dot"></i> Розташування
+                                    </h6>
+                                    <div id="trackingMap" style="height: 250px; margin-top: 15px; border-radius: 6px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6>
+                                <i class="fas fa-history"></i> Історія статусів
+                            </h6>
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-success"></div>
+                                    <div class="timeline-content">
+                                        <strong>Доставлено</strong>
+                                        <p class="text-muted mb-0">Посилка успішно доставлена адресатові</p>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-primary"></div>
+                                    <div class="timeline-content">
+                                        <strong>У дорозі</strong>
+                                        <p class="text-muted mb-0">Посилка в розпорядженні курійра</p>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-warning"></div>
+                                    <div class="timeline-content">
+                                        <strong>На складі</strong>
+                                        <p class="text-muted mb-0">Посилка зареєстрована і очікує відправкиЯ</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="notFoundContainer" style="display: none;">
+                    <div class="alert alert-danger" role="alert">
+                        <h5>Посилка не знайдена</h5>
+                        <p>Перевірте номер трекування та спробуйте ще раз.</p>
+                    </div>
+                </div>
+
+                <div id="loadingContainer" style="display: none;">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Завантаження...</span>
+                        </div>
+                        <p class="mt-3">Шукаємо вашу посилку...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline-item {
+        display: flex;
+        margin-bottom: 30px;
+    }
+
+    .timeline-marker {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-top: 5px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .timeline-marker::after {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 30px;
+        width: 2px;
+        height: 40px;
+        background-color: #ddd;
+    }
+
+    .timeline-content {
+        flex: 1;
+    }
+
+    .timeline-content strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let trackingMap = null;
+
+        document.getElementById('trackBtn').addEventListener('click', async function() {
+            const trackingNumber = document.getElementById('trackingNumber').value.trim();
+            
+            if (!trackingNumber) {
+                alert('Будь ласка, введіть номер трекування');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                // Запит до API
+                const response = await fetch(`/api/gateway/shipment/${encodeURIComponent(trackingNumber)}`);
+                
+                if (response.ok) {
+                    const shipment = await response.json();
+                    displayShipmentInfo(shipment);
+                    showResultContainer();
+                    hideNotFound();
+                } else {
+                    hideResultContainer();
+                    showNotFound();
+                }
+            } catch (error) {
+                console.error('Помилка:', error);
+                hideResultContainer();
+                showNotFound();
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function displayShipmentInfo(shipment) {
+            document.getElementById('trackNumber').textContent = shipment.trackNumber;
+            document.getElementById('shipmentId').textContent = shipment.id;
+            document.getElementById('regionId').textContent = `Регіон ${shipment.regionId}`;
+            document.getElementById('createdAt').textContent = new Date(shipment.createdAt).toLocaleString('uk-UA');
+            
+            const statusBadge = document.getElementById('status');
+            const statusText = getStatusText(shipment.status);
+            statusBadge.textContent = statusText;
+            statusBadge.className = `badge ${getStatusClass(shipment.status)}`;
+
+            document.getElementById('shipmentStatus').innerHTML = `
+                <i class="${getStatusIcon(shipment.status)}"></i> 
+                ${statusText}
+            `;
+
+            // Ітмодиль стандартну локацію на карту
+            if (!trackingMap) {
+                trackingMap = L.map('trackingMap').setView([50.4501, 30.5234], 6);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 18
+                }).addTo(trackingMap);
+            }
+
+            // Маркер розташування
+            L.circleMarker([50.4501 + Math.random() * 0.5, 30.5234 + Math.random() * 0.5], {
+                radius: 10,
+                fillColor: '#0d6efd',
+                color: '#000',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(trackingMap).bindPopup(shipment.trackNumber);
+        }
+
+        function getStatusText(status) {
+            const statuses = {
+                'Stored': 'На складі 📦',
+                'InTransit': 'У дорозі 🚚',
+                'Delivered': 'Доставлено ✅'
+            };
+            return statuses[status] || status;
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'Stored': 'bg-warning',
+                'InTransit': 'bg-info',
+                'Delivered': 'bg-success'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+
+        function getStatusIcon(status) {
+            const icons = {
+                'Stored': 'fas fa-box',
+                'InTransit': 'fas fa-truck',
+                'Delivered': 'fas fa-check-circle'
+            };
+            return icons[status] || 'fas fa-question-circle';
+        }
+
+        function showLoading() {
+            document.getElementById('loadingContainer').style.display = 'block';
+            hideResultContainer();
+            hideNotFound();
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingContainer').style.display = 'none';
+        }
+
+        function showResultContainer() {
+            document.getElementById('resultContainer').style.display = 'block';
+        }
+
+        function hideResultContainer() {
+            document.getElementById('resultContainer').style.display = 'none';
+        }
+
+        function showNotFound() {
+            document.getElementById('notFoundContainer').style.display = 'block';
+        }
+
+        function hideNotFound() {
+            document.getElementById('notFoundContainer').style.display = 'none';
+        }
+    </script>
+}

@@ -9,10 +9,10 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// Додаємо тільки базові сервіси
-builder.Services.AddControllers();
+// ✅ Додаємо MVC + API
+builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Використовує Swashbuckle
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IShardingStrategy>(new HashShardingStrategy(3));
@@ -20,6 +20,9 @@ builder.Services.AddScoped<IShipmentRepository, DistributedShipmentRepository>()
 builder.Services.AddHostedService<DataSimulator>();
 
 var app = builder.Build();
+
+// ✅ Статичні файли (CSS, JS, картинки)
+app.UseStaticFiles();
 
 // Налаштування Swagger
 if (app.Environment.IsDevelopment())
@@ -31,5 +34,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapControllers();
+// ✅ MVC маршрутизація
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.Run();
